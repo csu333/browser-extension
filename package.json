@@ -1,6 +1,6 @@
 {
   "name": "simplelogin-extension",
-  "version": "2.11.1",
+  "version": "2.11.1.1",
   "betaRev": "0",
   "description": "SimpleLogin Browser Extension",
   "author": "extension@simplelogin.io",
@@ -27,7 +27,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.10",
     "@sentry/browser": "^5.25.0",
     "@sentry/integrations": "^5.30.0",
-    "axios": "^0.27.2",
+    "axios": "^1.6.8",
     "bootstrap": "^4.6.1",
     "bootstrap-vue": "^2.21.2",
     "tippy.js": "^6.3.7",
