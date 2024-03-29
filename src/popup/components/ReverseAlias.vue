@@ -31,7 +31,7 @@
         <b-input
           v-model="receiverEmail"
           v-on:keyup.enter="createReverseAlias"
-          placeholder="First Last &lt;email@example.com&gt;"
+          placeholder="First Last &lt;email@example.com&gt;, Other First Last &lt;email2@example.com&gt;"
           :disabled="loading"
         />
       </div>
@@ -40,23 +40,35 @@
       <div class="m-2 p-2" v-else>
         <p class="font-weight-bold">
           {{
-            createdReverseAlias.existed
+            createdReverseAlias.reduce(
+              (existed, alias) => (existed &= alias.existed),
+              true
+            )
               ? "You have created this reverse-alias before:"
               : "Reverse-alias is created:"
           }}
         </p>
         <p>
           <a
-            v-clipboard="() => createdReverseAlias.reverse_alias"
+            v-clipboard="
+              () =>
+                createdReverseAlias
+                  .map((alias) => alias.reverse_alias)
+                  .join(';')
+            "
             v-clipboard:success="clipboardSuccessHandler"
             v-clipboard:error="clipboardErrorHandler"
             v-b-tooltip.hover
             title="Click to Copy"
             class="cursor"
-          >
-            <span class="text-success">
-              {{ createdReverseAlias.reverse_alias }}
-            </span>
+            ><ul style="margin-bottom: 0">
+              <li
+                v-for="alias in createdReverseAlias"
+                v-bind:key="alias.reverse_alias"
+              >
+                <b>{{ alias.reverse_alias }}</b>
+              </li>
+            </ul>
           </a>
         </p>
         <small>
@@ -67,8 +79,14 @@
             </li>
           </ul>
           The email will be forwarded to
-          <b>{{ createdReverseAlias.contact }}</b
-          >.<br />
+          <ul style="margin-bottom: 0">
+            <li
+              v-for="alias in createdReverseAlias"
+              v-bind:key="alias.reverse_alias"
+            >
+              <b>{{ alias.contact }}</b>
+            </li>
+          </ul>
           The receiver will see <b>{{ alias.email }}</b> as your email
           address.<br />
         </small>
@@ -121,17 +139,23 @@ export default {
     // Create reverse-alias
     async createReverseAlias() {
       this.loading = true;
-      const response = await callAPI(
-        API_ROUTE.CREATE_REVERSE_ALIAS,
-        {
-          alias_id: this.alias.id,
-        },
-        {
-          contact: this.receiverEmail,
-        },
-        API_ON_ERR.TOAST
-      );
-      this.createdReverseAlias = response ? response.data : null;
+      var alias_list = [];
+      for (let receiver_email of this.receiverEmail.split(/[;,\n]/)) {
+        const response = await callAPI(
+          API_ROUTE.CREATE_REVERSE_ALIAS,
+          {
+            alias_id: this.alias.id,
+          },
+          {
+            contact: receiver_email,
+          },
+          API_ON_ERR.TOAST
+        );
+        if (response) {
+          alias_list.push(response.data);
+        }
+      }
+      this.createdReverseAlias = alias_list;
       this.loading = false;
     },
 
